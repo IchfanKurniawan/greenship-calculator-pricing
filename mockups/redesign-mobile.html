@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>GREENSHIP Fee Calculator — Redesign Mobile</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=Parkinsans:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --forest: #295244;
+        --leaf: #5fb25c;
+        --mint: #e1f4e5;
+        --paper: #f7faf6;
+        --line: #dbe5dc;
+        --ink: #18332a;
+        --body: #53685f;
+        --orange: #f59b45;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: Onest, system-ui, sans-serif;
+      }
+      .phone {
+        width: 390px;
+        min-height: 844px;
+        background: var(--paper);
+      }
+      header {
+        height: 72px;
+        background: var(--forest);
+        display: flex;
+        align-items: center;
+        padding: 0 18px;
+        position: relative;
+        overflow: hidden;
+      }
+      header:after {
+        content: "";
+        position: absolute;
+        inset: 0 0 0 54%;
+        background: url("./assets/gbci-hero-home.webp") center/cover;
+        opacity: 0.12;
+      }
+      header img {
+        width: 174px;
+        z-index: 1;
+      }
+      .menu {
+        margin-left: auto;
+        width: 40px;
+        height: 40px;
+        border: 1px solid #799b8f;
+        border-radius: 11px;
+        display: grid;
+        place-items: center;
+        z-index: 1;
+      }
+      .menu span,
+      .menu span:before,
+      .menu span:after {
+        content: "";
+        display: block;
+        width: 17px;
+        height: 1.5px;
+        background: #fff;
+      }
+      .menu span:before {
+        transform: translateY(-5px);
+      }
+      .menu span:after {
+        transform: translateY(3.5px);
+      }
+      main {
+        padding: 22px 18px 120px;
+      }
+      .back {
+        font-size: 12px;
+        color: #587167;
+        font-weight: 600;
+        margin-bottom: 17px;
+      }
+      .title {
+        font:
+          600 27px/1.15 Parkinsans,
+          sans-serif;
+        letter-spacing: -0.03em;
+        margin: 0 0 8px;
+        color: var(--forest);
+      }
+      .sub {
+        margin: 0 0 22px;
+        color: var(--body);
+        font-size: 13px;
+        line-height: 1.55;
+      }
+      .steps {
+        display: flex;
+        align-items: center;
+        margin: 0 0 24px;
+      }
+      .step-node {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+      }
+      .steps i {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: var(--leaf);
+        color: #173c26;
+        display: grid;
+        place-items: center;
+        font-style: normal;
+        font-size: 12px;
+        font-weight: 800;
+      }
+      .step-node.current i {
+        background: var(--forest);
+        color: #fff;
+      }
+      .step-node.future i {
+        background: #dbe5dc;
+        color: #52685f;
+      }
+      .steps b {
+        height: 2px;
+        flex: 1;
+        background: #bcd5c4;
+      }
+      .steps span {
+        font-size: 12px;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+      .panel {
+        background: #fff;
+        border-radius: 14px;
+        box-shadow: 0 10px 30px rgba(31, 72, 57, 0.08);
+        overflow: hidden;
+      }
+      .panel-head {
+        padding: 18px 18px 15px;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        align-items: center;
+        gap: 11px;
+      }
+      .icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        background: var(--mint);
+        display: grid;
+        place-items: center;
+        color: var(--forest);
+        font-weight: 800;
+      }
+      .panel-head h2 {
+        font:
+          600 16px Parkinsans,
+          sans-serif;
+        margin: 0;
+      }
+      .panel-head p {
+        font-size: 12px;
+        color: #52685f;
+        margin: 3px 0 0;
+      }
+      .form {
+        padding: 18px;
+      }
+      .label {
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        color: #52685f;
+        display: block;
+        margin: 0 0 9px;
+      }
+      .select {
+        height: 49px;
+        border: 1px solid #9db8a8;
+        border-radius: 11px;
+        display: flex;
+        align-items: center;
+        padding: 0 13px;
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 19px;
+      }
+      .select span {
+        margin-left: auto;
+        color: #52685f;
+      }
+      .field {
+        min-height: 54px;
+        border: 1.5px solid #6d9c7c;
+        border-radius: 11px;
+        display: flex;
+        align-items: center;
+        padding: 10px 13px;
+        box-shadow: 0 0 0 3px rgba(95, 178, 92, 0.1);
+      }
+      .field strong {
+        font-size: 19px;
+        font-variant-numeric: tabular-nums;
+      }
+      .field em {
+        margin-left: auto;
+        font-size: 12px;
+        color: #52685f;
+        font-style: normal;
+        font-weight: 700;
+      }
+      .hint {
+        font-size: 12px;
+        color: #52685f;
+        line-height: 1.45;
+        margin: 8px 0 18px;
+      }
+      .ready {
+        background: #eef8f0;
+        border-radius: 10px;
+        padding: 12px 13px;
+        color: #376847;
+        font-size: 12px;
+        display: flex;
+        gap: 9px;
+        align-items: center;
+      }
+      .ready i {
+        width: 8px;
+        height: 8px;
+        background: var(--leaf);
+        border-radius: 50%;
+      }
+      .bottom {
+        position: fixed;
+        left: 0;
+        bottom: 0;
+        width: 390px;
+        background: var(--forest);
+        color: #fff;
+        padding: 15px 18px 18px;
+        box-shadow: 0 -12px 30px rgba(24, 51, 42, 0.16);
+      }
+      .bottom-top {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        margin-bottom: 12px;
+      }
+      .bottom small {
+        display: block;
+        color: #e4f0eb;
+        font-size: 11px;
+        letter-spacing: 0.07em;
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .amount {
+        font:
+          600 23px Parkinsans,
+          sans-serif;
+        letter-spacing: -0.03em;
+      }
+      .tag {
+        background: #d9f0dd;
+        color: #245d35;
+        padding: 6px 8px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 800;
+      }
+      .cta {
+        width: 100%;
+        border: 0;
+        border-radius: 10px;
+        background: var(--leaf);
+        color: #143b25;
+        padding: 13px;
+        font-weight: 800;
+      }
+      .disclaimer {
+        margin: 18px 2px 0;
+        font-size: 12px;
+        line-height: 1.5;
+        color: #50685f;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="phone">
+      <header>
+        <img src="./assets/gbci-brand-light.webp" alt="GBC Indonesia" />
+        <div class="menu"><span></span></div>
+      </header>
+      <main>
+        <div class="back">← Ganti skema</div>
+        <h1 class="title">Hitung biaya New Building</h1>
+        <p class="sub">
+          Lengkapi dua informasi proyek untuk melihat estimasi sertifikasi
+          GREENSHIP.
+        </p>
+        <div class="steps">
+          <div class="step-node done"><i>✓</i></div>
+          <b></b>
+          <div class="step-node current"><i>2</i><span>Data proyek</span></div>
+          <b></b>
+          <div class="step-node future"><i>3</i></div>
+        </div>
+        <section class="panel">
+          <div class="panel-head">
+            <div class="icon">NB</div>
+            <div>
+              <h2>New Building</h2>
+              <p>Bangunan baru, penilaian pertama kali</p>
+            </div>
+          </div>
+          <div class="form">
+            <label class="label">FUNGSI BANGUNAN</label>
+            <div class="select">Perkantoran <span>⌄</span></div>
+            <label class="label">LUAS AREA KOTOR (GFA)</label>
+            <div class="field"><strong>12.500</strong><em>m²</em></div>
+            <div class="hint">
+              Minimum 250 m². Tarif mengikuti kelompok luas proyek.
+            </div>
+            <div class="ready">
+              <i></i>Data lengkap — estimasi siap ditinjau
+            </div>
+          </div>
+        </section>
+        <p class="disclaimer">
+          Estimasi mengikuti tabel biaya resmi GBCI dan belum termasuk akomodasi
+          verifikator untuk proyek di luar Jabodetabek.
+        </p>
+      </main>
+      <div class="bottom">
+        <div class="bottom-top">
+          <div>
+            <small>ESTIMASI TOTAL</small>
+            <div class="amount">Rp175.000.000</div>
+          </div>
+          <span class="tag">ESTIMASI</span>
+        </div>
+        <button class="cta">Lihat rincian biaya</button>
+      </div>
+    </div>
+  </body>
+</html>
