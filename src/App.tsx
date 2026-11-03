@@ -86,6 +86,9 @@ const idr = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 0,
 });
 const number = new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 });
+const areaInputNumber = new Intl.NumberFormat("en-US", {
+  maximumFractionDigits: 15,
+});
 
 function SchemeIcon({ scheme }: { scheme: Scheme }) {
   const Icon =
@@ -106,6 +109,16 @@ function SchemeIcon({ scheme }: { scheme: Scheme }) {
 function parseLocaleNumber(value: string) {
   const normalized = value.trim().replace(/\s/g, "").replace(/,/g, "");
   return Number(normalized);
+}
+
+function formatWeightedArea(value: number) {
+  const rounded = Math.round(value * 100) / 100;
+  const threshold = value > 200 && rounded <= 200 ? 200 : value > 100 && rounded <= 100 ? 100 : null;
+  if (threshold !== null) {
+    const precise = Number(value.toFixed(6));
+    return precise <= threshold ? `> ${threshold}` : areaInputNumber.format(precise);
+  }
+  return number.format(value);
 }
 
 function initialScheme(): Scheme | null {
@@ -327,7 +340,7 @@ function Calculator({ scheme }: { scheme: Scheme }) {
     if (next === unit) return;
     if (area && Number.isFinite(parsedArea))
       setArea(
-        number.format(
+        areaInputNumber.format(
           next === "m2" ? parsedArea * 10_000 : parsedArea / 10_000,
         ),
       );
@@ -392,7 +405,7 @@ function Calculator({ scheme }: { scheme: Scheme }) {
                 onBlur={() => {
                   validate();
                   if (Number.isFinite(parsedArea))
-                    setArea(number.format(parsedArea));
+                    setArea(areaInputNumber.format(parsedArea));
                 }}
                 inputMode="decimal"
                 type="text"
@@ -535,7 +548,8 @@ function HomeTypes({
               <input
                 aria-label={`Number of units for ${type.name}`}
                 type="number"
-                min="0"
+                min="1"
+                step="1"
                 value={type.units || ""}
                 onChange={(e) => update(type.id, "units", e.target.value)}
                 placeholder="0"
@@ -630,7 +644,7 @@ function ResultPanel({
           {result.weightedAverageArea && (
             <div>
               <span>Weighted average area</span>
-              <b>{number.format(result.weightedAverageArea)} m²</b>
+              <b>{formatWeightedArea(result.weightedAverageArea)} m²</b>
             </div>
           )}
           <div className="total-line">
@@ -685,7 +699,7 @@ function minimumHint(scheme: Scheme) {
 
 function ruleHelp(scheme: Scheme, result: EstimateResult) {
   if (scheme === "HOMES_B" && result.weightedAverageArea)
-    return `The weighted average area is ${number.format(result.weightedAverageArea)} m², with a multiplier of ${result.multiplier}.`;
+    return `The weighted average area is ${formatWeightedArea(result.weightedAverageArea)} m², with a multiplier of ${result.multiplier}.`;
   if (result.capApplied)
     return "The maximum donation limit has been applied to this exact calculation.";
   if (scheme.startsWith("NH_"))

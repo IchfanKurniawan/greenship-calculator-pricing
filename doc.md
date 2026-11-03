@@ -1,18 +1,17 @@
 # Greenship Certification Pricing Calculator
 
-Version: 1.4
-Date: 2026-04-22
+Version: 1.6
+Date: 2026-11-03
 
 Primary implementation references:
-- `src/engine/constants.ts`
 - `src/engine/calculator.ts`
-- `src/components/forms/NBEBForm.tsx`
-- `src/components/forms/OtherForms.tsx`
-- `src/components/results/ResultPanel.tsx`
+- `src/engine/types.ts`
+- `src/engine/calculator.test.ts`
+- `src/App.tsx`
 
 ## 1. Overview
 
-This project is a single-page calculator for estimating GREENSHIP certification fees across the supported schemes. The app is built with Vite, React, TypeScript, and Tailwind CSS, and it is deployed as a static site.
+This project is a single-page calculator for estimating GREENSHIP certification fees across the supported schemes. The app is built with Vite, React, TypeScript, and plain CSS, and it is deployed as a static site.
 
 All fee logic lives in the TypeScript engine under `src/engine/`. The React layer is responsible for collecting user input, validating it, and rendering the fee breakdown.
 
@@ -42,6 +41,8 @@ All fee logic lives in the TypeScript engine under `src/engine/`. The React laye
 | 80,000 - 149,999 | 245,000,000 | 285,000,000 |
 | >= 150,000 | Base fee of the last bracket + Rp 1,500 x (area - 150,000) |
 
+For areas below 150,000 m2, fractional values stay in the bracket containing their whole-number part. For example, 2,749.5 m2 uses the 250–2,749 bracket; 2,750 m2 starts the next bracket. Above 150,000 m2, the surcharge uses the full area, including any fraction.
+
 Total fee cap:
 
 ```text
@@ -63,6 +64,7 @@ UI rule:
 | >= 10,000 | 110,000,000 | 122,500,000 |
 
 Interior Space has no surcharge and no 500M total cap rule.
+Fractional areas stay in the bracket containing their whole-number part; for example, 249.5 m2 uses the 25–249 bracket.
 
 ### 3.3 Transit Station
 
@@ -74,6 +76,8 @@ Interior Space has no surcharge and no 500M total cap rule.
 | 30,000 - 79,999 | 245,000,000 |
 | 80,000 - 149,999 | 285,000,000 |
 | >= 150,000 | 285,000,000 + Rp 1,500 x (area - 150,000) |
+
+For areas below 150,000 m2, fractional values stay in the bracket containing their whole-number part. Above 150,000 m2, the surcharge uses the full area.
 
 Total fee cap:
 
@@ -91,7 +95,7 @@ Certification fee:
 | Floor area | Cert fee |
 | --- | --- |
 | <= 100 m2 | 40,000,000 |
-| 101 - 200 m2 | 44,000,000 |
+| > 100 - 200 m2 | 44,000,000 |
 | > 200 m2 | 50,000,000 |
 
 Total:
@@ -115,11 +119,11 @@ Step 1 - base fee by units:
 
 | Units | Base fee |
 | --- | --- |
-| <= 25 | 40,000,000 |
-| 26 - 100 | 45,000,000 |
-| > 100 | 52,000,000 |
+| <= 25 | 42,500,000 |
+| 26 - 100 | 47,000,000 |
+| > 100 | 53,000,000 |
 
-Step 2 - discount by active type rank:
+Step 2 - sort active types by unit count in descending order, then apply the discount by rank. Ties retain their input order. The result breakdown follows this ranked order:
 
 | Rank | Discount multiplier |
 | --- | --- |
@@ -128,7 +132,7 @@ Step 2 - discount by active type rank:
 | 3rd | 0.75 |
 | 4th+ | 0.60 |
 
-Step 3 - surcharge for types with more than 9 units:
+Step 3 - surcharge for types with more than 3 units:
 
 ```text
 surcharge = ROUND(sqrt(units), 0) x 1,000,000
@@ -149,7 +153,7 @@ weightedAvg = sum(units_i x floorArea_i) / sum(units_i)
 | Weighted average | Multiplier |
 | --- | --- |
 | <= 100 m2 | 1.000 |
-| 101 - 200 m2 | 1.100 |
+| > 100 - 200 m2 | 1.100 |
 | > 200 m2 | 1.175 |
 
 Step 6 - final total:
@@ -159,11 +163,14 @@ total = round((certAfterCap + totalSurcharge) x multiplier)
 ```
 
 Validation rule:
-- Every active type must have `floorArea > 0` before calculation can run.
+- Every active type must have a positive whole-number unit count and a finite `floorArea > 0` before calculation can run.
+- Invalid rows are not silently ignored, including unnamed rows with a negative or nonnumeric value.
 
 UI rules:
 - The Homes B calculation shows certification donation only.
 - If any active type is missing floor area, the calculator does not return a result.
+- The breakdown shows discounted certification and unit surcharge separately for each type, followed by a negative cap adjustment when discounted fees exceed Rp 250,000,000.
+- The Rp 250,000,000 cap applies only to discounted certification fees. Surcharges are added after this cap, then the area multiplier applies to their sum. A cap warning appears when the subtotal is reduced.
 
 ### 3.6 Neighborhood
 
@@ -222,32 +229,20 @@ UI rule:
 ## 4. Current application structure
 
 ```text
-greenship-calc/
-├── public/
-│   └── favicon.svg
+Office_PricingCalc/
+├── public/assets/
 ├── src/
-│   ├── components/
-│   │   ├── forms/
-│   │   │   ├── NBEBForm.tsx
-│   │   │   ├── NumberInput.tsx
-│   │   │   └── OtherForms.tsx
-│   │   ├── layout/
-│   │   │   ├── Footer.tsx
-│   │   │   └── SideNav.tsx
-│   │   └── results/
-│   │       └── ResultPanel.tsx
 │   ├── engine/
 │   │   ├── calculator.ts
-│   │   ├── constants.ts
+│   │   ├── calculator.test.ts
 │   │   └── types.ts
 │   ├── App.tsx
-│   ├── index.css
-│   └── main.tsx
-├── DISCREPANCY_AUDIT.md
-├── README.md
+│   ├── main.tsx
+│   └── styles.css
+├── doc.md
 ├── index.html
-├── netlify.toml
 ├── package.json
+├── vercel.json
 └── vite.config.ts
 ```
 
@@ -257,18 +252,30 @@ greenship-calc/
 - Result panels update in real time as valid inputs become available.
 - `NB`, `EB`, `TS`, and `NH` hide surcharge rows when the final total reaches Rp 500,000,000.
 - Homes B requires floor area for every active type before any total is shown.
-- Neighborhood phase changes and unit changes clear the current area input to avoid cross-context errors.
+- Homes B requires a positive integer count for every active type.
+- Neighborhood unit changes convert the current area between hectares and square metres; scheme changes reset the calculator input.
+- Area input formatting preserves fractional values through 15 decimal places to avoid changing a pricing bracket on blur.
+- Weighted average floor area displays up to six decimal places (or `> 100` / `> 200`) when two-decimal rounding would hide a multiplier threshold crossing.
 - The result panel includes:
   - Total fee in IDR
   - Fee breakdown
   - Warning cards
   - CTA to the GBCI form
-  - Print / PDF export via `window.print()`
 
 ## 6. Security and deployment notes
 
 - Frontend-only static application
 - No server, database, or SQL layer
-- Netlify headers are configured in `netlify.toml`
+- Vercel headers are configured in `vercel.json`
 - The app does not use `dangerouslySetInnerHTML`
 - Pricing logic is isolated in pure TypeScript for easier review and testing
+
+## 7. Regression scenarios
+
+`src/engine/calculator.test.ts` checks all eight schemes at bracket starts and ends, fractional areas, surcharge and cap boundaries, neighborhood interpolation boundaries, and invalid inputs. Representative Homes B results with 90 m2 per unit are:
+
+| Scenario | Certification before multiplier | Surcharge | Total |
+| --- | ---: | ---: | ---: |
+| One type, 4 units | 42,500,000 | 2,000,000 | 44,500,000 |
+| One type, 9 units | 42,500,000 | 3,000,000 | 45,500,000 |
+| Seven types, 101 units each | 250,000,000 after cap | 70,000,000 | 320,000,000 |

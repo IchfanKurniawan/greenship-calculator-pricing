@@ -127,7 +127,7 @@ function buildingEstimate(area: number, fn: BuildingFunction): EstimateResult {
     );
   }
   const bracket = BUILDING_BRACKETS.find(
-    (item) => area >= item.min && area <= item.max,
+    (item) => Math.floor(area) >= item.min && Math.floor(area) <= item.max,
   )!;
   return result(bracket[key], bracket[key], 0, bracket.label, false);
 }
@@ -136,7 +136,7 @@ function interiorEstimate(area: number, fn: BuildingFunction): EstimateResult {
   area = requirePositive(area, 25, "Project area");
   const key = fn === "office" ? "office" : "other";
   const bracket = INTERIOR_BRACKETS.find(
-    (item) => area >= item.min && area <= item.max,
+    (item) => Math.floor(area) >= item.min && Math.floor(area) <= item.max,
   )!;
   return result(bracket[key], bracket[key], undefined, bracket.label, false);
 }
@@ -157,7 +157,7 @@ function transitEstimate(area: number): EstimateResult {
     );
   }
   const bracket = TRANSIT_BRACKETS.find(
-    (item) => area >= item.min && area <= item.max,
+    (item) => Math.floor(area) >= item.min && Math.floor(area) <= item.max,
   )!;
   return result(bracket.fee, bracket.fee, 0, bracket.label, false);
 }
@@ -167,7 +167,7 @@ function homesIndividual(area: number): EstimateResult {
   const total =
     area <= 100 ? 40_000_000 : area <= 200 ? 44_000_000 : 50_000_000;
   const bracketLabel =
-    area <= 100 ? "≤ 100 m²" : area <= 200 ? "101–200 m²" : "> 200 m²";
+    area <= 100 ? "≤ 100 m²" : area <= 200 ? "Over 100 to 200 m²" : "> 200 m²";
   return {
     total,
     baseFee: total,
@@ -179,45 +179,60 @@ function homesIndividual(area: number): EstimateResult {
 
 function homesDeveloper(types: HomeType[]): EstimateResult {
   const active = types.filter(
-    (type) => type.units > 0 || type.floorArea > 0 || type.name.trim(),
+    (type) => type.units !== 0 || type.floorArea !== 0 || type.name.trim(),
   );
   if (!active.length) throw new Error("Add at least one home type.");
   active.forEach((type, index) => {
-    if (type.units <= 0)
+    if (!Number.isSafeInteger(type.units) || type.units <= 0)
       throw new Error(
-        `Enter the number of units for ${type.name || `Type ${index + 1}`}.`,
+        `Enter a whole number of units for ${type.name || `Type ${index + 1}`}.`,
       );
-    if (type.floorArea <= 0)
+    if (!Number.isFinite(type.floorArea) || type.floorArea <= 0)
       throw new Error(
         `Enter the floor area for ${type.name || `Type ${index + 1}`}.`,
       );
   });
+  const ranked = [...active].sort((a, b) => b.units - a.units);
   const discounts = [1, 0.75, 0.75];
   let discounted = 0;
   let surcharge = 0;
   let totalUnits = 0;
   let weightedArea = 0;
-  const lineItems = active.map((type, index) => {
+  const lineItems: EstimateResult["lineItems"] = [];
+  ranked.forEach((type, index) => {
     const base =
       type.units <= 25
-        ? 40_000_000
+        ? 42_500_000
         : type.units <= 100
-          ? 45_000_000
-          : 52_000_000;
+          ? 47_000_000
+          : 53_000_000;
     const discount = discounts[index] ?? 0.6;
     const fee = base * discount;
     const extra =
-      type.units > 9 ? Math.round(Math.sqrt(type.units)) * 1_000_000 : 0;
+      type.units > 3 ? Math.round(Math.sqrt(type.units)) * 1_000_000 : 0;
     discounted += fee;
     surcharge += extra;
     totalUnits += type.units;
     weightedArea += type.units * type.floorArea;
-    return {
-      label: `${type.name || `Type ${index + 1}`} · ${Math.round(discount * 100)}%`,
-      amount: fee + extra,
-    };
+    const name = type.name || `Type ${index + 1}`;
+    lineItems.push({
+      label: `${name} · ${Math.round(discount * 100)}% certification`,
+      amount: fee,
+    });
+    if (extra > 0)
+      lineItems.push({ label: `${name} · unit surcharge`, amount: extra });
   });
   const certAfterCap = Math.min(discounted, HOMES_CAP);
+  const capApplied = discounted > HOMES_CAP;
+  if (capApplied)
+    lineItems.push({
+      label: "Certification cap adjustment",
+      amount: certAfterCap - discounted,
+    });
+  if (!Number.isSafeInteger(totalUnits))
+    throw new Error("Total number of units is too large to calculate.");
+  if (!Number.isFinite(weightedArea))
+    throw new Error("Floor area is too large to calculate.");
   const average = weightedArea / totalUnits;
   const multiplier = average <= 100 ? 1 : average <= 200 ? 1.1 : 1.175;
   const total = Math.round((certAfterCap + surcharge) * multiplier);
@@ -225,12 +240,14 @@ function homesDeveloper(types: HomeType[]): EstimateResult {
     total,
     baseFee: certAfterCap,
     surcharge,
-    capApplied: certAfterCap === HOMES_CAP,
+    capApplied,
     bracketLabel: `${active.length} active home ${active.length === 1 ? "type" : "types"}`,
     multiplier,
     weightedAverageArea: average,
     lineItems,
-    warnings: [],
+    warnings: capApplied
+      ? ["The Rp250,000,000 certification cap has been applied before surcharges and the area multiplier."]
+      : [],
   };
 }
 
@@ -330,5 +347,7 @@ export function calculateEstimate(input: EstimateInput): EstimateResult {
   if (scheme === "TS") return transitEstimate(input.area ?? 0);
   if (scheme === "HOMES_A") return homesIndividual(input.area ?? 0);
   if (scheme === "HOMES_B") return homesDeveloper(input.homeTypes ?? []);
-  return neighborhood(input.area ?? 0, scheme === "NH_BUILT");
+  if (scheme === "NH_PLAN" || scheme === "NH_BUILT")
+    return neighborhood(input.area ?? 0, scheme === "NH_BUILT");
+  throw new Error("Unsupported scheme.");
 }

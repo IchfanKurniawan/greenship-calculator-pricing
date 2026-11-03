@@ -134,8 +134,8 @@ Codes such as NB, EB, IS, and NH remain secondary labels, not the primary decisi
 - Mobile: render each type as an Accordion item with a concise summary such as `Type A · 25 unit · 90 m²`.
 - Show an always-visible summary above the result: active types, total units, weighted average floor area, multiplier, and certification subtotal against the Rp250,000,000 cap.
 - Validate at the row level. A missing floor area message must identify the affected type and explain how to recover.
-- Explain discounts by active type rank in the calculation details.
-- Keep row identity stable when rows are added or removed; ranking recalculates from the visible active order.
+- Explain discounts by active type rank after sorting by unit count from largest to smallest in the calculation details.
+- Keep row identity stable when rows are added or removed; ranking recalculates by descending unit count, with input order breaking ties.
 
 ### Neighborhood
 
@@ -274,7 +274,7 @@ The UI may format or explain these fields but must not reimplement the mathemati
 | Homes Individual, 100 m²                    |                                    Rp40,000,000 |
 | Homes Individual, 101 m²                    |                                    Rp44,000,000 |
 | Homes Individual, 201 m²                    |                                    Rp50,000,000 |
-| Homes Developer: 25 × 90 m² and 16 × 120 m² |                                    Rp86,900,000 |
+| Homes Developer: 25 × 90 m² and 16 × 120 m² |                                    Rp91,712,500 |
 | Neighborhood Plan, 200.5 ha                 |        band 2 at effective 201 ha; Rp85,500,000 |
 | Neighborhood Built, 20.3 ha                 |        band 2 at effective 21 ha; Rp130,000,000 |
 
