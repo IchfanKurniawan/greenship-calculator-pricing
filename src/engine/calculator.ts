@@ -164,10 +164,29 @@ function transitEstimate(area: number): EstimateResult {
 
 function homesIndividual(area: number): EstimateResult {
   area = requirePositive(area, 1, "Floor area");
+  const bandArea = Math.floor(area);
+  if (bandArea < 150) {
+    return {
+      total: null,
+      bracketLabel: "< 150 m²",
+      lineItems: [],
+      warnings: [],
+      contactMessage:
+        "Send message to rating@gbcindonesia.org or sertifikasi@gbcindonesia.org to learn more about this pricing scheme.",
+    };
+  }
   const total =
-    area <= 100 ? 40_000_000 : area <= 200 ? 44_000_000 : 50_000_000;
+    bandArea <= 200
+      ? 42_000_000
+      : bandArea <= 500
+        ? 46_000_000
+        : 50_000_000;
   const bracketLabel =
-    area <= 100 ? "≤ 100 m²" : area <= 200 ? "Over 100 to 200 m²" : "> 200 m²";
+    bandArea <= 200
+      ? "150–200 m²"
+      : bandArea <= 500
+        ? "201–500 m²"
+        : "> 500 m²";
   return {
     total,
     baseFee: total,

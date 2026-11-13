@@ -694,6 +694,29 @@ input:focus-visible,
   color: #bad0c5;
   font-size: 13px;
 }
+.contact-title {
+  font-size: clamp(26px, 2.6vw, 34px);
+}
+.contact-card {
+  margin-top: 24px;
+  padding: 16px;
+  background: rgba(225, 244, 229, 0.12);
+  border: 1px solid rgba(156, 209, 170, 0.45);
+  border-radius: 10px;
+}
+.contact-card p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: #e6f1e9;
+  overflow-wrap: anywhere;
+}
+.contact-card a {
+  color: #fff;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
 .measure {
   margin: 28px 0;
 }

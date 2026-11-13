@@ -271,9 +271,13 @@ The UI may format or explain these fields but must not reimplement the mathemati
 | NB office, 150,001 m²                       |                                   Rp245,001,500 |
 | Transit Station, 300,000 m²                 | Rp500,000,000 cap applied; surcharge row hidden |
 | Interior Space commercial, 10,000 m²        |                                   Rp122,500,000 |
-| Homes Individual, 100 m²                    |                                    Rp40,000,000 |
-| Homes Individual, 101 m²                    |                                    Rp44,000,000 |
-| Homes Individual, 201 m²                    |                                    Rp50,000,000 |
+| Homes Individual, 100 m²                    | On-request message; no price |
+| Homes Individual, 101 m²                    | On-request message; no price |
+| Homes Individual, 150 m²                    |                                    Rp42,000,000 |
+| Homes Individual, 200.9 m²                  |                                    Rp42,000,000 |
+| Homes Individual, 201 m²                    |                                    Rp46,000,000 |
+| Homes Individual, 500.9 m²                  |                                    Rp46,000,000 |
+| Homes Individual, 501 m²                    |                                    Rp50,000,000 |
 | Homes Developer: 25 × 90 m² and 16 × 120 m² |                                    Rp91,712,500 |
 | Neighborhood Plan, 200.5 ha                 |        band 2 at effective 201 ha; Rp85,500,000 |
 | Neighborhood Built, 20.3 ha                 |        band 2 at effective 21 ha; Rp130,000,000 |

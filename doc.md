@@ -1,7 +1,7 @@
 # Greenship Certification Pricing Calculator
 
-Version: 1.6
-Date: 2026-11-03
+Version: 1.7
+Date: 2026-11-13
 
 Primary implementation references:
 - `src/engine/calculator.ts`
@@ -94,9 +94,10 @@ Certification fee:
 
 | Floor area | Cert fee |
 | --- | --- |
-| <= 100 m2 | 40,000,000 |
-| > 100 - 200 m2 | 44,000,000 |
-| > 200 m2 | 50,000,000 |
+| < 150 m2 | On request - no price is shown |
+| 150 - 200 m2 | 42,000,000 |
+| 201 - 500 m2 | 46,000,000 |
+| > 500 m2 | 50,000,000 |
 
 Total:
 
@@ -104,8 +105,17 @@ Total:
 total = certFee
 ```
 
+Fractional areas use the whole-number part (floor) to select the band, so `200.9 m2` uses the 150-200 band and `500.9 m2` uses the 201-500 band. `501 m2` starts the > 500 band.
+
+Below 150 m2 there is no certification fee to compute. The engine returns `total: null` with a contact message instead of a price:
+
+```text
+Send message to rating@gbcindonesia.org or sertifikasi@gbcindonesia.org to learn more about this pricing scheme.
+```
+
 UI rule:
 - The Homes A calculation shows certification donation only.
+- Below 150 m2, the result panel shows the contact message with `mailto:` links for both addresses. It does not show a total, measurement spine, breakdown, or next-step CTA.
 
 ### 3.5 Homes - Developer
 
@@ -250,6 +260,8 @@ Office_PricingCalc/
 
 - The forms compute validation and derived results directly from current input state.
 - Result panels update in real time as valid inputs become available.
+- Homes A below 150 m2 returns no total and shows the on-request contact message instead of a price.
+- Homes A selects its fee band from the whole-number part of the area (floor).
 - `NB`, `EB`, `TS`, and `NH` hide surcharge rows when the final total reaches Rp 500,000,000.
 - Homes B requires floor area for every active type before any total is shown.
 - Homes B requires a positive integer count for every active type.

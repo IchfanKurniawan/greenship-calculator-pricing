@@ -602,13 +602,15 @@ function ResultPanel({
         </div>
       </aside>
     );
+  const total = result.total;
+  if (total === null) return <ContactResult result={result} scheme={scheme} />;
   const capped = !["IS", "HOMES_A", "HOMES_B"].includes(scheme);
-  const position = Math.min(100, (result.total / 500_000_000) * 100);
+  const position = Math.min(100, (total / 500_000_000) * 100);
   return (
     <>
       <aside className="result-panel" id="result-panel" aria-live="polite">
         <div className="result-top">
-          <h2>{idr.format(result.total)}</h2>
+          <h2>{idr.format(total)}</h2>
           <p>{`${schemes.find((s) => s.code === scheme)?.name} scheme · ${result.bracketLabel}`}</p>
         </div>
         {capped && (
@@ -649,7 +651,7 @@ function ResultPanel({
           )}
           <div className="total-line">
             <span>Exact donation</span>
-            <b>{idr.format(result.total)}</b>
+            <b>{idr.format(total)}</b>
           </div>
         </div>
         {result.warnings.map((w) => (
@@ -679,7 +681,7 @@ function ResultPanel({
       <div className="mobile-summary">
         <span>
           <small>Exact donation</small>
-          <b>{idr.format(result.total)}</b>
+          <b>{idr.format(total)}</b>
         </span>
         <a href="#result-panel">View details</a>
       </div>
@@ -687,9 +689,39 @@ function ResultPanel({
   );
 }
 
+function ContactResult({
+  result,
+  scheme,
+}: {
+  result: EstimateResult;
+  scheme: Scheme;
+}) {
+  const meta = schemes.find((s) => s.code === scheme)!;
+  return (
+    <aside className="result-panel" id="result-panel" aria-live="polite">
+      <div className="result-top">
+        <p className="result-kicker">{meta.name}</p>
+        <h2 className="contact-title">Pricing on request</h2>
+        <p>{result.bracketLabel} · GBC Indonesia will confirm the applicable donation.</p>
+      </div>
+      <div className="contact-card">
+        <p>
+          Send message to{" "}
+          <a href="mailto:rating@gbcindonesia.org">rating@gbcindonesia.org</a> or{" "}
+          <a href="mailto:sertifikasi@gbcindonesia.org">
+            sertifikasi@gbcindonesia.org
+          </a>{" "}
+          to learn more about this pricing scheme.
+        </p>
+      </div>
+    </aside>
+  );
+}
+
 function minimumHint(scheme: Scheme) {
   if (scheme === "IS") return "Minimum 25 m².";
-  if (scheme === "HOMES_A") return "Enter the gross floor area of the home.";
+  if (scheme === "HOMES_A")
+    return "Enter the gross floor area of the home. Homes below 150 m² are quoted on request.";
   if (scheme === "NH_PLAN")
     return "Minimum 10 ha. Select hectares or square metres.";
   if (scheme === "NH_BUILT")
@@ -698,6 +730,8 @@ function minimumHint(scheme: Scheme) {
 }
 
 function ruleHelp(scheme: Scheme, result: EstimateResult) {
+  if (result.contactMessage)
+    return "Pricing for homes below 150 m² is available on request from GBC Indonesia.";
   if (scheme === "HOMES_B" && result.weightedAverageArea)
     return `The weighted average area is ${formatWeightedArea(result.weightedAverageArea)} m², with a multiplier of ${result.multiplier}.`;
   if (result.capApplied)

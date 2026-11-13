@@ -13,7 +13,8 @@ export type EstimateInput = {
 export type LineItem = { label: string; amount?: number; value?: string };
 
 export type EstimateResult = {
-  total: number;
+  /** null when the scheme is quoted on request instead of returning a price. */
+  total: number | null;
   baseFee?: number;
   surcharge?: number;
   capApplied?: boolean;
@@ -22,4 +23,5 @@ export type EstimateResult = {
   weightedAverageArea?: number;
   lineItems: LineItem[];
   warnings: string[];
+  contactMessage?: string;
 };

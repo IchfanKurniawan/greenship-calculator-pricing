@@ -11,7 +11,7 @@ describe("GREENSHIP pricing", () => {
     expect(value.surcharge).toBeUndefined();
   });
   it("calculates Interior Space commercial", () => expect(calculateEstimate({ scheme: "IS", area: 10_000, buildingFunction: "other" }).total).toBe(122_500_000));
-  it.each([[100, 40_000_000], [101, 44_000_000], [201, 50_000_000]])("calculates Homes Individual %s", (area, total) => expect(calculateEstimate({ scheme: "HOMES_A", area }).total).toBe(total));
+  it.each([[150, 42_000_000], [200, 42_000_000], [201, 46_000_000], [500, 46_000_000], [501, 50_000_000]])("calculates Homes Individual %s", (area, total) => expect(calculateEstimate({ scheme: "HOMES_A", area }).total).toBe(total));
   it("calculates Homes Developer with the weighted area multiplier", () => {
     const result = calculateEstimate({ scheme: "HOMES_B", homeTypes: [{ id: "a", name: "Tipe A", units: 25, floorArea: 90 }, { id: "b", name: "Tipe B", units: 16, floorArea: 120 }] });
     expect(result.baseFee).toBe(74_375_000);
@@ -101,14 +101,28 @@ describe("interior and individual home pricing scenarios", () => {
   it("rejects Interior Space below 25 m²", () => {
     expect(() => calculateEstimate({ scheme: "IS", area: 24.99 })).toThrow("Project area minimum 25.");
   });
-  it.each([[1, 40_000_000], [100, 40_000_000], [100.5, 44_000_000], [200, 44_000_000], [200.5, 50_000_000]])("prices Homes Individual at %s m²", (area, total) => {
+  it.each([
+    [150, 42_000_000], [200, 42_000_000], [200.9, 42_000_000],
+    [201, 46_000_000], [500, 46_000_000], [500.9, 46_000_000],
+    [501, 50_000_000], [1_000, 50_000_000],
+  ])("prices Homes Individual at %s m²", (area, total) => {
     expect(calculateEstimate({ scheme: "HOMES_A", area }).total).toBe(total);
+  });
+  it.each([1, 100, 149, 149.9])("marks Homes Individual at %s m² as on request", (area) => {
+    const result = calculateEstimate({ scheme: "HOMES_A", area });
+    expect(result.total).toBeNull();
+    expect(result.lineItems).toEqual([]);
+    expect(result.contactMessage).toContain("rating@gbcindonesia.org");
+    expect(result.contactMessage).toContain("sertifikasi@gbcindonesia.org");
   });
   it("rejects a nonpositive individual home area", () => {
     expect(() => calculateEstimate({ scheme: "HOMES_A", area: 0 })).toThrow("Floor area minimum 1.");
   });
-  it("labels a fractional individual home area accurately", () => {
-    expect(calculateEstimate({ scheme: "HOMES_A", area: 100.5 }).bracketLabel).toBe("Over 100 to 200 m²");
+  it("labels the individual home bands accurately", () => {
+    expect(calculateEstimate({ scheme: "HOMES_A", area: 150.5 }).bracketLabel).toBe("150–200 m²");
+    expect(calculateEstimate({ scheme: "HOMES_A", area: 201 }).bracketLabel).toBe("201–500 m²");
+    expect(calculateEstimate({ scheme: "HOMES_A", area: 501 }).bracketLabel).toBe("> 500 m²");
+    expect(calculateEstimate({ scheme: "HOMES_A", area: 149.9 }).bracketLabel).toBe("< 150 m²");
   });
 });
 
